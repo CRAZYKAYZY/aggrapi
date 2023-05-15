@@ -1,0 +1,63 @@
+version: '3.9'
+services:
+  #db-service
+  db:
+    image: postgres:15.1-alpine
+    container_name: aggrdb_container
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+      - DATABASE_HOST=${DB_HOST}
+      - DATABASE_PORT=${DB_PORT}
+    ports:
+      - "5433:5432"
+    hostname: db
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - aggrapi-net
+
+  #migration_service
+  migration:
+    image: migrate/migrate
+    container_name: aggr_migration_container
+    volumes:
+      - "./db/migrations:/migrations"
+    environment:
+      - DATABASE_URL
+    env_file:
+      - .env
+    command: ["-path=/migrations", "-database=${DATABASE_URL}", "up"]
+    depends_on:
+      - db
+    #restart: on-failure
+    networks:
+      - aggrapi-net
+  #backend-web-service
+  app:
+    container_name: aggrapi_container
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+      - DATABASE_HOST=${DB_HOST}
+      - DATABASE_PORT=${DB_PORT}
+    tty: true
+    build: .
+    env_file:
+      - .env
+    ports:
+      - 8081:8080
+    restart: on-failure
+    depends_on:
+      - db
+    networks:
+      - aggrapi-net
+
+volumes:
+  pg_data:
+
+networks:
+  aggrapi-net:
+    driver: bridge
