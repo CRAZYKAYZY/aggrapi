@@ -5,11 +5,12 @@ services:
     image: postgres:15.1-alpine
     container_name: aggrdb_container
     environment:
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-      - POSTGRES_DB=${DB_NAME}
-      - DATABASE_HOST=${DB_HOST}
-      - DATABASE_PORT=${DB_PORT}
+      - DB_URL=${DATABASE_URL}
+      # - POSTGRES_USER=${DB_USER}
+      # - POSTGRES_PASSWORD=${DB_PASSWORD}
+      # - POSTGRES_DB=${DB_NAME}
+      # - DATABASE_HOST=${DB_HOST}
+      # - DATABASE_PORT=${DB_PORT}
     ports:
       - "5433:5432"
     hostname: db
@@ -38,17 +39,17 @@ services:
   app:
     container_name: aggrapi_container
     environment:
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-      - POSTGRES_DB=${DB_NAME}
-      - DATABASE_HOST=${DB_HOST}
-      - DATABASE_PORT=${DB_PORT}
+      - DB_URL=${DATABASE_URL}
+      # - POSTGRES_PASSWORD=${DB_PASSWORD}
+      # - POSTGRES_DB=${DB_NAME}
+      # - DATABASE_HOST=${DB_HOST}
+      # - DATABASE_PORT=${DB_PORT}
     tty: true
     build: .
     env_file:
       - .env
     ports:
-      - 8081:8080
+      - 8081:8081
     restart: on-failure
     depends_on:
       - db
