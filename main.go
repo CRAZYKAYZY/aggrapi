@@ -3,11 +3,11 @@ package main
 import (
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 
-	"github.com/go-chi/chi"
-	"github.com/go-chi/cors"
+	"github.com/CRAZYKAYZY/aggrapi/api"
+	"github.com/CRAZYKAYZY/aggrapi/db"
+	sqlc "github.com/CRAZYKAYZY/aggrapi/db/sqlc"
 	"github.com/joho/godotenv"
 )
 
@@ -16,35 +16,21 @@ func main() {
 
 	portString := os.Getenv("PORT")
 
+	dbCon, err := db.ConnectDb()
+	if err != nil {
+		log.Fatal("failed to connect to db")
+	}
+
+	store := sqlc.NewStore(dbCon)
+	server := api.NewServer(store)
+
 	if portString == "" {
 		log.Fatal("PORT is not found in the environment")
 	}
-	router := chi.NewRouter()
 
-	router.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"https://*,", "http://*"},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"*"},
-		ExposedHeaders:   []string{"Link"},
-		AllowCredentials: false,
-		MaxAge:           300,
-	}))
-
-	v1Router := chi.NewRouter()
-
-	v1Router.Get("/healthz", handlerReadiness)
-	v1Router.Get("/err", handlerErr)
-
-	router.Mount("/v1", v1Router)
-
-	srv := &http.Server{
-		Handler: router,
-		Addr:    ":" + portString,
-	}
-
-	err := srv.ListenAndServe()
+	err = server.Start(":" + portString)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Failed to start server:", err)
 	}
 
 	fmt.Println("port:", portString)
