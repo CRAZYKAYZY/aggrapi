@@ -1,6 +1,7 @@
 package api
 
 import (
+	"log"
 	"net/http"
 
 	db "github.com/CRAZYKAYZY/aggrapi/db/sqlc"
@@ -11,6 +12,13 @@ import (
 type Server struct {
 	store  *db.Store
 	router *chi.Mux
+}
+
+func MiddlewareLogger(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("Received request: %s %s", r.Method, r.URL.Path)
+		next.ServeHTTP(w, r)
+	})
 }
 
 func NewServer(store *db.Store) *Server {
@@ -27,6 +35,7 @@ func NewServer(store *db.Store) *Server {
 	}))
 
 	v1Router := chi.NewRouter()
+	v1Router.Use(MiddlewareLogger)
 
 	v1Router.Get("/healthz", server.HandlerReadiness)
 	v1Router.Get("/err", server.HandlerErr)
