@@ -40,6 +40,9 @@ func NewServer(store *db.Store) *Server {
 	v1Router.Get("/healthz", server.HandlerReadiness)
 	v1Router.Get("/err", server.HandlerErr)
 	v1Router.Post("/users", server.HandlerUsersCreate)
+	v1Router.Get("/users/{id}", server.HandlerUsersGet)
+	v1Router.Post("/login", server.LoginHandler)
+	v1Router.Put("/users", server.UpdateUserHandler)
 
 	router.Mount("/v1", v1Router)
 
