@@ -3,11 +3,22 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"os"
+	"strings"
 	"time"
 
 	sqlc "github.com/CRAZYKAYZY/aggrapi/db/sqlc"
+	"github.com/CRAZYKAYZY/aggrapi/util"
+	"github.com/go-chi/chi"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
+
+type UserResponse struct {
+	ID    string `json:"id"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
+}
 
 func (server *Server) HandlerUsersCreate(w http.ResponseWriter, r *http.Request) {
 	type Users struct {
@@ -24,20 +35,156 @@ func (server *Server) HandlerUsersCreate(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	uuidValue := uuid.New()
+	hashedPassword, err := util.HashedPass(userparams.Password)
+	if err != nil {
+		RespondWithError(w, http.StatusInternalServerError, "couldn't hash password")
+		return
+	}
+
+	//uuidValue := uuid.New()
 	user, err := server.store.CreateUser(r.Context(), sqlc.CreateUserParams{
-		ID:        int32(uuidValue.ID()),
+		ID:        uuid.New(),
 		Name:      userparams.Name,
 		Email:     userparams.Email,
-		Password:  userparams.Password,
+		Password:  hashedPassword,
 		CreatedAt: time.Now().UTC(),
 		UpdatedAt: time.Now().UTC(),
 	})
 
+	res := UserResponse{
+		ID:    user.ID.String(),
+		Email: user.Email,
+		Name:  user.Name,
+	}
+
 	if err != nil {
-		RespondWithError(w, http.StatusInternalServerError, "Couldn't create user")
+		RespondWithError(w, http.StatusInternalServerError, "user failed to create")
 		return
 	}
 
-	RespondWithJSON(w, http.StatusOK, user)
+	RespondWithJSON(w, http.StatusOK, res)
+}
+
+func (server *Server) HandlerUsersGet(w http.ResponseWriter, r *http.Request) {
+	// Extract the user ID from the request path using chi
+	id := chi.URLParam(r, "id")
+
+	// Parse the ID string into a UUID
+	userID, err := uuid.Parse(id)
+	if err != nil {
+		RespondWithError(w, http.StatusBadRequest, "invalid user ID")
+		return
+	}
+
+	// Call the getUser function to retrieve the user from the database
+	user, err := server.store.GetUser(r.Context(), sqlc.GetUserParams{ID: userID})
+	if err != nil {
+		RespondWithError(w, http.StatusInternalServerError, "failed to retrieve user")
+		return
+	}
+
+	// Handle the case when the user is not found
+	// if user == nil {
+	// 	http.NotFound(w, r)
+	// 	return
+	// }
+
+	// Create a response object
+	res := UserResponse{
+		ID:    user.ID.String(),
+		Name:  user.Name,
+		Email: user.Email,
+	}
+
+	// Send the user response
+	RespondWithJSON(w, http.StatusOK, res)
+}
+
+func (server *Server) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
+	// Extract the authorization token from the request header
+	tokenString := r.Header.Get("Authorization")
+	if tokenString == "" {
+		RespondWithError(w, http.StatusUnauthorized, "missing authorization token")
+		return
+	}
+
+	tokenString = strings.TrimPrefix(tokenString, "Bearer ")
+
+	// Parse and validate the authorization token
+	token, err := jwt.ParseWithClaims(tokenString, jwt.MapClaims{}, func(token *jwt.Token) (interface{}, error) {
+		// Return the secret key used to sign the token
+		jwtSecret := os.Getenv("JWT_SECRET")
+		return []byte(jwtSecret), nil
+	})
+	if err != nil {
+		RespondWithError(w, http.StatusUnauthorized, "invalid authorization token")
+		return
+	}
+
+	// Verify if the token is valid and contains the required claims
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok || !token.Valid {
+		RespondWithError(w, http.StatusUnauthorized, "failed to verify")
+		return
+	}
+
+	// Extract the user ID from the claims
+	id, ok := claims["sub"].(string)
+	if !ok {
+		RespondWithError(w, http.StatusUnauthorized, "invalid user id")
+		return
+	}
+
+	userID, err := uuid.Parse(id)
+	if err != nil {
+		RespondWithError(w, http.StatusBadRequest, "invalid user ID")
+		return
+	}
+
+	// Get the user from the database using the id
+	// userParams := sqlc.GetUserParams{
+	// 	ID:     uuid.UUID(id),
+	// 	Offset: 0, // Set the desired offset value
+	// }
+
+	// Get the user from the database using the id
+	user, err := server.store.GetUser(r.Context(), sqlc.GetUserParams{ID: userID})
+	// Implement logic to update the user fields like name and email
+
+	type UpdateUserReq struct {
+		Name     string `json:"name" binding:"required"`
+		Email    string `json:"email" binding:"required"`
+		Password string `json:"password,omitempty"`
+	}
+
+	var updateReq UpdateUserReq
+	err = json.NewDecoder(r.Body).Decode(&updateReq)
+	if err != nil {
+		RespondWithError(w, http.StatusBadRequest, "failed to decode request body")
+		return
+	}
+
+	hashedPassword, err := util.HashedPass(updateReq.Password)
+	if err != nil {
+		RespondWithError(w, http.StatusInternalServerError, "couldn't hash password")
+		return
+	}
+
+	// Update the user fields
+	user.Name = updateReq.Name
+	user.Email = updateReq.Email
+	user.Password = hashedPassword
+
+	// Create the UpdateUserParams with the updated values
+	updateParams := sqlc.UpdateUserParams{
+		ID:       user.ID,
+		Name:     user.Name,
+		Email:    user.Email,
+		Password: user.Password,
+	}
+
+	updatedUser, err := server.store.UpdateUser(r.Context(), updateParams)
+
+	// Return a success response
+	RespondWithJSON(w, http.StatusOK, updatedUser)
 }

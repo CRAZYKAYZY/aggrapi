@@ -8,6 +8,8 @@ package db
 import (
 	"context"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 const createUser = `-- name: CreateUser :one
@@ -17,7 +19,7 @@ RETURNING id, name, email, password, created_at, updated_at
 `
 
 type CreateUserParams struct {
-	ID        int32     `json:"id"`
+	ID        uuid.UUID `json:"id"`
 	Name      string    `json:"name"`
 	Email     string    `json:"email"`
 	Password  string    `json:"password"`
@@ -33,6 +35,90 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		arg.Password,
 		arg.CreatedAt,
 		arg.UpdatedAt,
+	)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Email,
+		&i.Password,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getUser = `-- name: GetUser :one
+SELECT id, name, email, password, created_at, updated_at FROM users
+WHERE id = $1 LIMIT 1 OFFSET $2
+`
+
+type GetUserParams struct {
+	ID     uuid.UUID `json:"id"`
+	Offset int32     `json:"offset"`
+}
+
+func (q *Queries) GetUser(ctx context.Context, arg GetUserParams) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUser, arg.ID, arg.Offset)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Email,
+		&i.Password,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getUserByEmail = `-- name: GetUserByEmail :one
+SELECT id, name, email, password
+FROM users
+WHERE email = $1
+`
+
+type GetUserByEmailRow struct {
+	ID       uuid.UUID `json:"id"`
+	Name     string    `json:"name"`
+	Email    string    `json:"email"`
+	Password string    `json:"password"`
+}
+
+func (q *Queries) GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error) {
+	row := q.db.QueryRowContext(ctx, getUserByEmail, email)
+	var i GetUserByEmailRow
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Email,
+		&i.Password,
+	)
+	return i, err
+}
+
+const updateUser = `-- name: UpdateUser :one
+UPDATE users
+set name = $2,
+email = $3,
+password = $4
+WHERE id = $1
+RETURNING id, name, email, password, created_at, updated_at
+`
+
+type UpdateUserParams struct {
+	ID       uuid.UUID `json:"id"`
+	Name     string    `json:"name"`
+	Email    string    `json:"email"`
+	Password string    `json:"password"`
+}
+
+func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error) {
+	row := q.db.QueryRowContext(ctx, updateUser,
+		arg.ID,
+		arg.Name,
+		arg.Email,
+		arg.Password,
 	)
 	var i User
 	err := row.Scan(
