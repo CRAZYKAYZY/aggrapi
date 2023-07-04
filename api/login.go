@@ -53,19 +53,11 @@ func (server *Server) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// err = godotenv.Load(".env")
-	// if err != nil {
-	// 	log.Fatal("Error loading jwt secret")
-	// }
-
 	// Set expiration time for access token
-	accessTokenExpirationTime := time.Now().Add(1 * time.Hour)
+	accessTokenExpirationTime := time.Now().Add(2 * time.Minute)
 
-	// Set expiration time for access token
+	// Set expiration time for refresh token
 	refreshTokenExpirationTime := time.Now().Add(60 * 24 * time.Hour)
-
-	// Get the JWT secret from the environment variable
-	//jwtSecret := os.Getenv("JWT_SECRET")
 
 	//set jwt claims for access token
 	accessClaims := jwt.MapClaims{
@@ -86,8 +78,8 @@ func (server *Server) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	refreshClaims := jwt.MapClaims{
 		"iss": "rss-refresh",
 		"sub": user.ID,
-		"exp": jwt.NewNumericDate(refreshTokenExpirationTime),
 		"iat": jwt.NewNumericDate(time.Now()),
+		"exp": jwt.NewNumericDate(refreshTokenExpirationTime),
 	}
 
 	// Create refresh token
