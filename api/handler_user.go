@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -20,7 +21,7 @@ type UserResponse struct {
 	Email string `json:"email"`
 }
 
-func (server *Server) HandlerUsersCreate(w http.ResponseWriter, r *http.Request) {
+func (server *Server) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	type Users struct {
 		Name     string `json:"name"`
 		Email    string `json:"email"`
@@ -65,7 +66,7 @@ func (server *Server) HandlerUsersCreate(w http.ResponseWriter, r *http.Request)
 	RespondWithJSON(w, http.StatusOK, res)
 }
 
-func (server *Server) HandlerUsersGet(w http.ResponseWriter, r *http.Request) {
+func (server *Server) GetUserHandler(w http.ResponseWriter, r *http.Request) {
 	// Extract the user ID from the request path using chi
 	id := chi.URLParam(r, "id")
 
@@ -83,12 +84,6 @@ func (server *Server) HandlerUsersGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Handle the case when the user is not found
-	// if user == nil {
-	// 	http.NotFound(w, r)
-	// 	return
-	// }
-
 	// Create a response object
 	res := UserResponse{
 		ID:    user.ID.String(),
@@ -100,6 +95,7 @@ func (server *Server) HandlerUsersGet(w http.ResponseWriter, r *http.Request) {
 	RespondWithJSON(w, http.StatusOK, res)
 }
 
+// Update User handler
 func (server *Server) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 	// Extract the authorization token from the request header
 	tokenString := r.Header.Get("Authorization")
@@ -142,18 +138,18 @@ func (server *Server) UpdateUserHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// Get the user from the database using the id
-	// userParams := sqlc.GetUserParams{
-	// 	ID:     uuid.UUID(id),
-	// 	Offset: 0, // Set the desired offset value
-	// }
-
-	// Get the user from the database using the id
 	user, err := server.store.GetUser(r.Context(), sqlc.GetUserParams{ID: userID})
+	if err != nil {
+		// Handle the error, e.g., log it, return an error response, etc.
+		log.Printf("Error getting user: %v", err)
+		RespondWithError(w, http.StatusInternalServerError, "Failed to get user")
+		return
+	}
 	// Implement logic to update the user fields like name and email
 
 	type UpdateUserReq struct {
-		Name     string `json:"name" binding:"required"`
-		Email    string `json:"email" binding:"required"`
+		Name     string `json:"name"`
+		Email    string `json:"email"`
 		Password string `json:"password,omitempty"`
 	}
 
@@ -164,16 +160,23 @@ func (server *Server) UpdateUserHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	hashedPassword, err := util.HashedPass(updateReq.Password)
-	if err != nil {
-		RespondWithError(w, http.StatusInternalServerError, "couldn't hash password")
-		return
+	// Update the user fields only if they are not empty
+	if updateReq.Name != "" {
+		user.Name = updateReq.Name
+	}
+	if updateReq.Email != "" {
+		user.Email = updateReq.Email
 	}
 
-	// Update the user fields
-	user.Name = updateReq.Name
-	user.Email = updateReq.Email
-	user.Password = hashedPassword
+	// Only update the password if it's not empty
+	if updateReq.Password != "" {
+		hashedPassword, err := util.HashedPass(updateReq.Password)
+		if err != nil {
+			RespondWithError(w, http.StatusInternalServerError, "couldn't hash password")
+			return
+		}
+		user.Password = hashedPassword
+	}
 
 	// Create the UpdateUserParams with the updated values
 	updateParams := sqlc.UpdateUserParams{
@@ -183,7 +186,21 @@ func (server *Server) UpdateUserHandler(w http.ResponseWriter, r *http.Request) 
 		Password: user.Password,
 	}
 
+	if err != nil {
+		// Handle the error, e.g., log it, return an error response, etc.
+		log.Printf("Error creating updateParams: %v", err)
+		RespondWithError(w, http.StatusInternalServerError, "Failed to create updateParams")
+		return
+	}
+
 	updatedUser, err := server.store.UpdateUser(r.Context(), updateParams)
+
+	if err != nil {
+		// Handle the error, e.g., log it, return an error response, etc.
+		log.Printf("Error creating updateParams: %v", err)
+		RespondWithError(w, http.StatusInternalServerError, "Failed to update user")
+		return
+	}
 
 	// Return a success response
 	RespondWithJSON(w, http.StatusOK, updatedUser)
