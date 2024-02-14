@@ -3,7 +3,7 @@ services:
   #db-service
   db:
     image: postgres:15.1-alpine
-    container_name: aggrdb_container
+    container_name: misdb_container
     environment:
       - DB_URL=${DATABASE_URL}
       # - POSTGRES_USER=${DB_USER}
@@ -17,12 +17,12 @@ services:
     volumes:
       - pg_data:/var/lib/postgresql/data
     networks:
-      - aggrapi-net
+      - mis-net
 
   #migration_service
   migration:
     image: migrate/migrate
-    container_name: aggr_migration_container
+    container_name: migration_container
     volumes:
       - "./db/migrations:/migrations"
     environment:
@@ -34,10 +34,10 @@ services:
       - db
     #restart: on-failure
     networks:
-      - aggrapi-net
+      - mis-net
   #backend-web-service
   app:
-    container_name: aggrapi_container
+    container_name: misapp_container
     environment:
       - DB_URL=${DATABASE_URL}
       # - POSTGRES_PASSWORD=${DB_PASSWORD}
@@ -54,11 +54,11 @@ services:
     depends_on:
       - db
     networks:
-      - aggrapi-net
+      - mis-net
 
 volumes:
   pg_data:
 
 networks:
-  aggrapi-net:
+  mis-net:
     driver: bridge

@@ -24,15 +24,15 @@ RUN go install -v ./...
 
 RUN go get -u && go mod tidy
 
-RUN go build -o /aggreapi
+RUN go build -o /misapi
 
 ## Deploy
 FROM gcr.io/distroless/base-debian10
 
 WORKDIR /
 
-COPY --from=build /aggreapi /aggreapi
+COPY --from=build /misapi /misapi
 
 EXPOSE 8080
 
-ENTRYPOINT ["/aggreapi"]
+ENTRYPOINT ["/misapi"]
