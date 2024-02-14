@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	db "github.com/CRAZYKAYZY/aggrapi/db/sqlc"
+	db "github.com/ChileKasoka/mis/db/sqlc"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/cors"
 )

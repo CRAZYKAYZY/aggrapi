@@ -5,9 +5,9 @@ import (
 	"log"
 	"os"
 
-	"github.com/CRAZYKAYZY/aggrapi/api"
-	"github.com/CRAZYKAYZY/aggrapi/db"
-	sqlc "github.com/CRAZYKAYZY/aggrapi/db/sqlc"
+	"github.com/ChileKasoka/mis/api"
+	"github.com/ChileKasoka/mis/db"
+	sqlc "github.com/ChileKasoka/mis/db/sqlc"
 	"github.com/joho/godotenv"
 )
 

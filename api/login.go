@@ -9,7 +9,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/joho/godotenv"
 
-	"github.com/CRAZYKAYZY/aggrapi/util"
+	"github.com/ChileKasoka/mis/util"
 )
 
 func (server *Server) LoginHandler(w http.ResponseWriter, r *http.Request) {

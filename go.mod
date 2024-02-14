@@ -1,4 +1,4 @@
-module github.com/CRAZYKAYZY/aggrapi
+module github.com/ChileKasoka/mis
 
 go 1.19
 

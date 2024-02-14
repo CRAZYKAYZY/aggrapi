@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	sqlc "github.com/CRAZYKAYZY/aggrapi/db/sqlc"
-	"github.com/CRAZYKAYZY/aggrapi/util"
+	sqlc "github.com/ChileKasoka/mis/db/sqlc"
+	"github.com/ChileKasoka/mis/util"
 	"github.com/go-chi/chi"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
