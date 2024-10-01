@@ -186,12 +186,12 @@ func (server *Server) UpdateUserHandler(w http.ResponseWriter, r *http.Request) 
 		Password: user.Password,
 	}
 
-	if err != nil {
-		// Handle the error, e.g., log it, return an error response, etc.
-		log.Printf("Error creating updateParams: %v", err)
-		RespondWithError(w, http.StatusInternalServerError, "Failed to create updateParams")
-		return
-	}
+	// if err != nil {
+	// 	// Handle the error, e.g., log it, return an error response, etc.
+	// 	log.Printf("Error creating updateParams: %v", err)
+	// 	RespondWithError(w, http.StatusInternalServerError, "Failed to create updateParams")
+	// 	return
+	// }
 
 	updatedUser, err := server.store.UpdateUser(r.Context(), updateParams)
 
