@@ -15,7 +15,7 @@ import (
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (id, name, email, password, created_at, updated_at)
 VALUES ($1, $2, $3, $4, $5, $6)
-RETURNING id, name, email, password, created_at, updated_at
+RETURNING id, name, email, password, created_at, updated_at, user_type
 `
 
 type CreateUserParams struct {
@@ -44,12 +44,13 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.Password,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.UserType,
 	)
 	return i, err
 }
 
 const getUser = `-- name: GetUser :one
-SELECT id, name, email, password, created_at, updated_at FROM users
+SELECT id, name, email, password, created_at, updated_at, user_type FROM users
 WHERE id = $1 LIMIT 1 OFFSET $2
 `
 
@@ -68,6 +69,7 @@ func (q *Queries) GetUser(ctx context.Context, arg GetUserParams) (User, error) 
 		&i.Password,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.UserType,
 	)
 	return i, err
 }
@@ -103,7 +105,7 @@ set name = $2,
 email = $3,
 password = $4
 WHERE id = $1
-RETURNING id, name, email, password, created_at, updated_at
+RETURNING id, name, email, password, created_at, updated_at, user_type
 `
 
 type UpdateUserParams struct {
@@ -128,6 +130,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		&i.Password,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.UserType,
 	)
 	return i, err
 }
