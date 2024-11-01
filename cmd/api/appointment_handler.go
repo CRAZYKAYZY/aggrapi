@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	//sqlc "github.com/ChileKasoka/mis/db/sqlc"
@@ -41,7 +42,7 @@ func (h *AppointmentHandler) GetAppointmentHandler(w http.ResponseWriter, r *htt
 	// Parse the appointment ID from the URL
 	appointmentID, err := uuid.Parse(id)
 	if err != nil {
-		util.RespondWithError(w, http.StatusInternalServerError, "could not decode")
+		fmt.Println("could not parse id")
 		return
 	}
 

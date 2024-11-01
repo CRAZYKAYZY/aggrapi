@@ -28,6 +28,8 @@ func main() {
 		log.Fatalf("Failed to initialize application: %v", err)
 	}
 
+	fmt.Println("Initialized successfully")
+
 	// Start the server
 	err = application.Server.Start(":" + portString)
 	if err != nil {

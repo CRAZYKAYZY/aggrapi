@@ -4,8 +4,8 @@ import (
 	"context"
 	"database/sql"
 
-	models "github.com/ChileKasoka/mis/db/sqlc"
 	sqlc "github.com/ChileKasoka/mis/db/sqlc"
+	models "github.com/ChileKasoka/mis/internal/models"
 	"github.com/google/uuid"
 )
 

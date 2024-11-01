@@ -1,7 +1,7 @@
 package services
 
 import (
-	models "github.com/ChileKasoka/mis/db/sqlc"
+	models "github.com/ChileKasoka/mis/internal/models"
 	"github.com/ChileKasoka/mis/internal/repositories"
 )
 

@@ -24,6 +24,18 @@ EXCEPTION
 END $$;
 
 -- Continue with table creation
+-- Step 1: Create the users table
+CREATE TABLE "users" (
+    "id" uuid PRIMARY KEY,             -- Unique identifier for each user
+    "name" varchar NOT NULL,           -- Name of the user
+    "email" varchar UNIQUE NOT NULL,   -- Unique email for each user
+    "password" varchar NOT NULL,       -- Password (hashed) for authentication
+    "user_type" user_type_enum NOT NULL DEFAULT 'customer',  -- Type of user (e.g., admin, vendor, customer)
+    "created_at" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Timestamp for when the user was created
+    "updated_at" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP  -- Timestamp for when the user was last updated
+);
+
+
 CREATE TABLE "contacts" (
   "id" uuid PRIMARY KEY,
   "user_id" uuid NOT NULL,
