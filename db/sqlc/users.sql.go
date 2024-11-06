@@ -53,16 +53,12 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 
 const getUser = `-- name: GetUser :one
 SELECT id, name, email, password, user_type, created_at, updated_at FROM users
-WHERE id = $1 LIMIT 1 OFFSET $2
+WHERE id = $1
+LIMIT 1
 `
 
-type GetUserParams struct {
-	ID     uuid.UUID `json:"id"`
-	Offset int32     `json:"offset"`
-}
-
-func (q *Queries) GetUser(ctx context.Context, arg GetUserParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, getUser, arg.ID, arg.Offset)
+func (q *Queries) GetUser(ctx context.Context, id uuid.UUID) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUser, id)
 	var i User
 	err := row.Scan(
 		&i.ID,
@@ -77,7 +73,7 @@ func (q *Queries) GetUser(ctx context.Context, arg GetUserParams) (User, error) 
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, name, email, password
+SELECT id, name, email, password, user_type
 FROM users
 WHERE email = $1
 `
@@ -87,6 +83,7 @@ type GetUserByEmailRow struct {
 	Name     string    `json:"name"`
 	Email    string    `json:"email"`
 	Password string    `json:"password"`
+	UserType string    `json:"user_type"`
 }
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error) {
@@ -97,6 +94,7 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (GetUserByEm
 		&i.Name,
 		&i.Email,
 		&i.Password,
+		&i.UserType,
 	)
 	return i, err
 }
