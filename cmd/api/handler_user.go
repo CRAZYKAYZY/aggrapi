@@ -6,9 +6,18 @@ import (
 
 	"github.com/ChileKasoka/mis/internal/models"
 	"github.com/ChileKasoka/mis/internal/services"
-	"github.com/ChileKasoka/mis/util"
 	"github.com/go-chi/chi"
 )
+
+type LoginRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type LoginResponse struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+}
 
 type UserHandler struct {
 	UserService services.UserService
@@ -20,6 +29,7 @@ func NewUserHandler(service services.UserService) *UserHandler {
 
 func (u *UserHandler) RegisterRoutes(r chi.Router) {
 	r.Post("/new-user", u.HandleNewUser)
+	r.Post("/login", u.Login)
 }
 
 func (u *UserHandler) HandleNewUser(w http.ResponseWriter, r *http.Request) {
@@ -30,13 +40,7 @@ func (u *UserHandler) HandleNewUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hashpass, err := util.HashedPass(user.Password)
-	if err != nil {
-		util.RespondWithError(w, http.StatusInternalServerError, "couldn't hash password")
-		return
-	}
-
-	newUser, err := u.UserService.PostNewUser(user.Name, user.Email, hashpass, string(user.UserType))
+	newUser, err := u.UserService.PostNewUser(user.Name, user.Email, user.Password, string(user.UserType))
 	if err != nil {
 		http.Error(w, "Failed to create user: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -45,6 +49,29 @@ func (u *UserHandler) HandleNewUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(newUser)
+}
+
+func (u *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
+	var req LoginRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "invalid request", http.StatusBadRequest)
+		return
+	}
+
+	accessToken, refreshToken, err := u.UserService.LoginService(req.Email, req.Password)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	res := LoginResponse{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(res)
 }
 
 // type UserResponse struct {
