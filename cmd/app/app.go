@@ -22,16 +22,18 @@ func Initialize() (*App, error) {
 	}
 	// Initialize repositories
 	appointmentRepo := repositories.NewAppointmentRepository(db)
-	//userRepo := repositories.NewUserRepository()
+	userRepo := repositories.NewUserRepository(db)
 
 	// Initialize services
 	appointmentService := services.NewAppointmentService(appointmentRepo)
+	userService := services.NewUserService(userRepo)
 
 	// Initialize handlers
 	appointmentHandler := api.NewAppointmentHandler(appointmentService)
+	userHandler := api.NewUserHandler(userService)
 
 	// Initialize server with handlers
-	srv := config.NewServer(appointmentHandler)
+	srv := config.NewServer(appointmentHandler, userHandler)
 
 	return &App{
 		Server: srv,

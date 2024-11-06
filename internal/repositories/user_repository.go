@@ -11,7 +11,7 @@ import (
 )
 
 type UserRepository interface {
-	CreateUser(user models.User) (models.User, error)
+	CreateUser(name, email, password, userType string) (models.User, error)
 }
 
 type userRepositoryImpl struct {
@@ -22,12 +22,13 @@ func NewUserRepository(db *sql.DB) UserRepository {
 	return &userRepositoryImpl{Queries: sqlc.New(db)}
 }
 
-func (r *userRepositoryImpl) CreateUser(user models.User) (models.User, error) {
+func (r *userRepositoryImpl) CreateUser(name, email, password, userType string) (models.User, error) {
 	arg := sqlc.CreateUserParams{
 		ID:        uuid.New(),
-		Name:      user.Name,
-		Email:     user.Email,
-		Password:  user.Password,
+		Name:      name,
+		Email:     email,
+		Password:  password,
+		UserType:  userType,
 		CreatedAt: time.Now().UTC(),
 		UpdatedAt: time.Now().UTC(),
 	}
@@ -44,7 +45,7 @@ func (r *userRepositoryImpl) CreateUser(user models.User) (models.User, error) {
 		Password:  createdUser.Password,
 		CreatedAt: createdUser.CreatedAt,
 		UpdatedAt: createdUser.UpdatedAt,
-		UserType:  createdUser.UserType,
+		UserType:  models.UserType(createdUser.UserType),
 	}
 
 	return result, nil

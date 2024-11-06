@@ -20,7 +20,7 @@ func MiddlewareLogger(next http.Handler) http.Handler {
 	})
 }
 
-func NewServer(appointmentHandler *api.AppointmentHandler) *Server {
+func NewServer(appointmentHandler *api.AppointmentHandler, userHandler *api.UserHandler) *Server {
 	// Initialize a new Chi router
 	router := chi.NewRouter()
 
@@ -40,6 +40,7 @@ func NewServer(appointmentHandler *api.AppointmentHandler) *Server {
 
 	// Register appointment routes
 	appointmentHandler.RegisterRoutes(v1Router)
+	userHandler.RegisterRoutes(v1Router)
 
 	// Mount the v1 API to the main router
 	router.Mount("/v1", v1Router)

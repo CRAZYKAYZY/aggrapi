@@ -67,16 +67,6 @@ type TimeSlot struct {
 	BufferTime sql.NullInt64 `json:"buffer_time"`
 }
 
-type User struct {
-	ID        uuid.UUID   `json:"id"`
-	Name      string      `json:"name"`
-	Email     string      `json:"email"`
-	Password  string      `json:"password"`
-	UserType  interface{} `json:"user_type"`
-	CreatedAt time.Time   `json:"created_at"`
-	UpdatedAt time.Time   `json:"updated_at"`
-}
-
 type Vendor struct {
 	ID             uuid.UUID      `json:"id"`
 	UserID         uuid.NullUUID  `json:"user_id"`

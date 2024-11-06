@@ -30,7 +30,7 @@ CREATE TABLE "users" (
     "name" varchar NOT NULL,           -- Name of the user
     "email" varchar UNIQUE NOT NULL,   -- Unique email for each user
     "password" varchar NOT NULL,       -- Password (hashed) for authentication
-    "user_type" user_type_enum NOT NULL DEFAULT 'customer',  -- Type of user (e.g., admin, vendor, customer)
+    "user_type" varchar NOT NULL,  -- Type of user (e.g., admin, vendor, customer)
     "created_at" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,  -- Timestamp for when the user was created
     "updated_at" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP  -- Timestamp for when the user was last updated
 );
@@ -137,12 +137,3 @@ ALTER TABLE "payments" ADD FOREIGN KEY ("appointment_id") REFERENCES "appointmen
 ALTER TABLE "payments" ADD FOREIGN KEY ("customer_id") REFERENCES "customers" ("id");
 
 ALTER TABLE "payments" ADD FOREIGN KEY ("vendor_id") REFERENCES "vendors" ("id");
-
--- Step 3: Add user type enum and modify users table
-DO $$ BEGIN
-    CREATE TYPE user_type_enum AS ENUM ('vendor', 'customer');
-EXCEPTION
-    WHEN duplicate_object THEN null;
-END $$;
-
-ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "user_type" user_type_enum;

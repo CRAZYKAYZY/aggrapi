@@ -1,19 +1,51 @@
 package api
 
-// import (
-// 	"encoding/json"
-// 	"log"
-// 	"net/http"
-// 	"os"
-// 	"strings"
-// 	"time"
+import (
+	"encoding/json"
+	"net/http"
 
-// 	sqlc "github.com/ChileKasoka/mis/db/sqlc"
-// 	"github.com/ChileKasoka/mis/util"
-// 	"github.com/go-chi/chi"
-// 	"github.com/golang-jwt/jwt/v5"
-// 	"github.com/google/uuid"
-// )
+	"github.com/ChileKasoka/mis/internal/models"
+	"github.com/ChileKasoka/mis/internal/services"
+	"github.com/ChileKasoka/mis/util"
+	"github.com/go-chi/chi"
+)
+
+type UserHandler struct {
+	UserService services.UserService
+}
+
+func NewUserHandler(service services.UserService) *UserHandler {
+	return &UserHandler{UserService: service}
+}
+
+func (u *UserHandler) RegisterRoutes(r chi.Router) {
+	r.Post("/new-user", u.HandleNewUser)
+}
+
+func (u *UserHandler) HandleNewUser(w http.ResponseWriter, r *http.Request) {
+	var user models.User
+
+	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	hashpass, err := util.HashedPass(user.Password)
+	if err != nil {
+		util.RespondWithError(w, http.StatusInternalServerError, "couldn't hash password")
+		return
+	}
+
+	newUser, err := u.UserService.PostNewUser(user.Name, user.Email, hashpass, string(user.UserType))
+	if err != nil {
+		http.Error(w, "Failed to create user: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(newUser)
+}
 
 // type UserResponse struct {
 // 	ID    string `json:"id"`
