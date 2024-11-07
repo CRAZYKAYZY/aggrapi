@@ -36,6 +36,11 @@ func (s *userServiceImpl) PostNewUser(name, email, password, userType string) (m
 		return models.User{}, errors.New("all fields are required")
 	}
 
+	getUser, err := s.repository.GetUserByEmail(email)
+	if err == nil && getUser.Email != " " {
+		return models.User{}, errors.New("email already taken")
+	}
+
 	hashpass, err := util.HashedPass(password)
 	if err != nil {
 		return models.User{}, errors.New("error hashing pass")
