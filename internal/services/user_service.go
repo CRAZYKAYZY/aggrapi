@@ -24,6 +24,7 @@ type UserService interface {
 	PostNewUser(name, email, password, userType string) (models.User, error)
 	LoginService(email, password string) (string, string, error)
 	UpdateUserService(id, name, email, password string) (*UpdateUserResponse, error)
+	RefreshTokenService(refreshToken, jwtSecret string) (string, error)
 }
 
 type userServiceImpl struct {
@@ -148,4 +149,47 @@ func (s *userServiceImpl) UpdateUserService(id, name, email, password string) (*
 		Name:  updatedUser.Name,
 		Email: updatedUser.Email,
 	}, nil
+}
+
+func (s *userServiceImpl) RefreshTokenService(refreshToken, jwtSecret string) (string, error) {
+	// Parse and validate the refresh token
+	token, err := jwt.ParseWithClaims(refreshToken, jwt.MapClaims{}, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("unexpected signing method")
+		}
+		return []byte(jwtSecret), nil
+	})
+	if err != nil || !token.Valid {
+		return "", errors.New("invalid refresh token")
+	}
+
+	// Extract claims and check the issuer
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok || claims["iss"] != "rss-refresh" {
+		return "", errors.New("invalid refresh token claims")
+	}
+
+	// Extract user ID from the refresh token
+	userID, ok := claims["sub"].(string)
+	if !ok {
+		return "", errors.New("user ID not found in token")
+	}
+
+	// Generate a new access token with a fresh expiration
+	accessTokenExpirationTime := time.Now().Add(2 * time.Minute)
+	accessClaims := jwt.MapClaims{
+		"iss": "rss-access",
+		"sub": userID,
+		"iat": jwt.NewNumericDate(time.Now().UTC()),
+		"exp": jwt.NewNumericDate(accessTokenExpirationTime.UTC()),
+	}
+
+	// Generate the new access token
+	newAccessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims)
+	signedAccessToken, err := newAccessToken.SignedString([]byte(jwtSecret))
+	if err != nil {
+		return "", errors.New("failed to generate new access token")
+	}
+
+	return signedAccessToken, nil
 }
