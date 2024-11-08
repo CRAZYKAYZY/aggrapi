@@ -15,9 +15,15 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+type UpdateUserResponse struct {
+	Name  string `json:"name"`
+	Email string `json:"email"`
+}
+
 type UserService interface {
 	PostNewUser(name, email, password, userType string) (models.User, error)
 	LoginService(email, password string) (string, string, error)
+	UpdateUserService(id, name, email, password string) (*UpdateUserResponse, error)
 }
 
 type userServiceImpl struct {
@@ -114,4 +120,32 @@ func (s *userServiceImpl) LoginService(email, password string) (string, string, 
 
 	// Successfully return the generated tokens
 	return signedAccessToken, signedRefreshToken, nil
+}
+
+func (s *userServiceImpl) UpdateUserService(id, name, email, password string) (*UpdateUserResponse, error) {
+	// Check for an existing user
+	user, err := s.repository.GetUserByID(id)
+	if err != nil {
+		return nil, errors.New("user not found")
+	}
+
+	// Optionally hash the password if it has been updated
+	hashedPassword := user.Password
+	if password != "" {
+		hashedPassword, err = util.HashedPass(password)
+		if err != nil {
+			return nil, errors.New("error hashing password")
+		}
+	}
+
+	// Call the repository to update the user
+	updatedUser, err := s.repository.UpdateUser(name, email, hashedPassword)
+	if err != nil {
+		return nil, err
+	}
+
+	return &UpdateUserResponse{
+		Name:  updatedUser.Name,
+		Email: updatedUser.Email,
+	}, nil
 }

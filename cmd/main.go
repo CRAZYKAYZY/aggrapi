@@ -18,12 +18,14 @@ func main() {
 	// Get the PORT environment variable
 	portString := os.Getenv("PORT")
 
+	jwtSecret := os.Getenv("JWT_SECRET")
+
 	if portString == "" {
 		log.Fatal("PORT is not found in the environment")
 	}
 
 	// Initialize the application
-	application, err := app.Initialize()
+	application, err := app.Initialize(jwtSecret)
 	if err != nil {
 		log.Fatalf("Failed to initialize application: %v", err)
 	}

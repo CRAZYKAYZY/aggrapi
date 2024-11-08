@@ -14,7 +14,7 @@ type App struct {
 	Server *config.Server
 }
 
-func Initialize() (*App, error) {
+func Initialize(jwtSecret string) (*App, error) {
 
 	db, err := db.ConnectDb()
 	if err != nil {
@@ -30,7 +30,7 @@ func Initialize() (*App, error) {
 
 	// Initialize handlers
 	appointmentHandler := api.NewAppointmentHandler(appointmentService)
-	userHandler := api.NewUserHandler(userService)
+	userHandler := api.NewUserHandler(userService, jwtSecret)
 
 	// Initialize server with handlers
 	srv := config.NewServer(appointmentHandler, userHandler)

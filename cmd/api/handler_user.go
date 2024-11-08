@@ -6,6 +6,9 @@ import (
 
 	"github.com/ChileKasoka/mis/internal/models"
 	"github.com/ChileKasoka/mis/internal/services"
+	"github.com/ChileKasoka/mis/middleware"
+
+	//"github.com/ChileKasoka/mis/util"
 	"github.com/go-chi/chi"
 )
 
@@ -18,18 +21,29 @@ type LoginResponse struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
 }
+type UpdateUserRequest struct {
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
 
 type UserHandler struct {
 	UserService services.UserService
+	JWTSecret   string
 }
 
-func NewUserHandler(service services.UserService) *UserHandler {
-	return &UserHandler{UserService: service}
+func NewUserHandler(service services.UserService, jwtSecret string) *UserHandler {
+	return &UserHandler{
+		UserService: service,
+		JWTSecret:   jwtSecret,
+	}
 }
 
 func (u *UserHandler) RegisterRoutes(r chi.Router) {
 	r.Post("/new-user", u.HandleNewUser)
 	r.Post("/login", u.Login)
+	//r.Put("/update-user", u.UpdateUserHandler)
+	r.With(middleware.JWTAuth(u.JWTSecret)).Put("/update-user", u.UpdateUserHandler)
 }
 
 func (u *UserHandler) HandleNewUser(w http.ResponseWriter, r *http.Request) {
@@ -72,6 +86,36 @@ func (u *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(res)
+}
+
+func (u *UserHandler) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
+
+	var req UpdateUserRequest
+	// Parse JSON request
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok || userID == "" {
+		http.Error(w, "Unauthorized: missing or invalid user ID", http.StatusUnauthorized)
+		return
+	}
+
+	// Call the service to update user
+	updatedUser, err := u.UserService.UpdateUserService(userID, req.Name, req.Email, req.Password)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Respond with the updated user details
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(updatedUser); err != nil {
+		http.Error(w, "failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // // Update User handler

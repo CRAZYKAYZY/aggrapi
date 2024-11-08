@@ -16,6 +16,7 @@ type UserRepository interface {
 	CreateUser(name, email, password, userType string) (models.User, error)
 	GetUserByID(uuidID string) (*models.User, error)
 	GetUserByEmail(email string) (*models.User, error)
+	UpdateUser(name, email, password string) (*models.User, error)
 }
 
 type userRepositoryImpl struct {
@@ -96,4 +97,35 @@ func (r *userRepositoryImpl) GetUserByEmail(email string) (*models.User, error) 
 	}
 
 	return getUser, nil
+}
+
+func (r *userRepositoryImpl) UpdateUser(name, email, password string) (*models.User, error) {
+	user, err := r.Queries.GetUserByEmail(context.TODO(), email)
+	if err != nil {
+		return &models.User{}, errors.New("user not found")
+	}
+
+	arg := sqlc.UpdateUserParams{
+		ID:       user.ID,  // Keep the same ID
+		Name:     name,     // Updated name
+		Email:    email,    // Updated email (if necessary)
+		Password: password, // Updated password (hashed beforehand)
+	}
+
+	updatedUser, err := r.Queries.UpdateUser(context.TODO(), arg)
+	if err != nil {
+		return nil, errors.New("failed to update user")
+	}
+
+	result := &models.User{
+		ID:        updatedUser.ID,
+		Name:      updatedUser.Name,
+		Email:     updatedUser.Email,
+		Password:  updatedUser.Password,
+		UserType:  models.UserType(updatedUser.UserType),
+		CreatedAt: updatedUser.CreatedAt,
+		UpdatedAt: updatedUser.UpdatedAt,
+	}
+
+	return result, nil
 }
