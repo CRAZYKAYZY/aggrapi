@@ -20,8 +20,14 @@ type UpdateUserResponse struct {
 	Email string `json:"email"`
 }
 
+type GetUserResponse struct {
+	Name  string `json:"name"`
+	Email string `json:"email"`
+}
+
 type UserService interface {
 	PostNewUser(name, email, password, userType string) (models.User, error)
+	GetUser(id string) (*models.User, error)
 	LoginService(email, password string) (string, string, error)
 	UpdateUserService(id, name, email, password string) (*UpdateUserResponse, error)
 	RefreshTokenService(refreshToken, jwtSecret string) (string, error)
@@ -64,6 +70,16 @@ func (s *userServiceImpl) PostNewUser(name, email, password, userType string) (m
 
 	// Return the created user
 	return createdUser, nil
+}
+
+func (s *userServiceImpl) GetUser(id string) (*models.User, error) {
+	// Call the repository method to fetch the user
+	getUser, err := s.repository.GetUserByID(id)
+	if err != nil {
+		return nil, errors.New("no user of such in db") // Return a nil pointer for *models.User
+	}
+
+	return getUser, nil // Return the user and nil error
 }
 
 func (s *userServiceImpl) LoginService(email, password string) (string, string, error) {
