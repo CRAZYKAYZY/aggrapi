@@ -19,10 +19,10 @@ RETURNING id, vendor_id, day_of_week, date
 `
 
 type CreateVendorAvailabilityParams struct {
-	ID        uuid.UUID     `json:"id"`
-	VendorID  uuid.NullUUID `json:"vendor_id"`
-	DayOfWeek interface{}   `json:"day_of_week"`
-	Date      sql.NullTime  `json:"date"`
+	ID        uuid.UUID    `json:"id"`
+	VendorID  uuid.UUID    `json:"vendor_id"`
+	DayOfWeek string       `json:"day_of_week"`
+	Date      sql.NullTime `json:"date"`
 }
 
 func (q *Queries) CreateVendorAvailability(ctx context.Context, arg CreateVendorAvailabilityParams) (VendorAvailability, error) {
@@ -83,10 +83,10 @@ RETURNING id, vendor_id, day_of_week, date
 `
 
 type UpdateVendorAvailabilityParams struct {
-	ID        uuid.UUID     `json:"id"`
-	VendorID  uuid.NullUUID `json:"vendor_id"`
-	DayOfWeek interface{}   `json:"day_of_week"`
-	Date      sql.NullTime  `json:"date"`
+	ID        uuid.UUID    `json:"id"`
+	VendorID  uuid.UUID    `json:"vendor_id"`
+	DayOfWeek string       `json:"day_of_week"`
+	Date      sql.NullTime `json:"date"`
 }
 
 func (q *Queries) UpdateVendorAvailability(ctx context.Context, arg UpdateVendorAvailabilityParams) (VendorAvailability, error) {

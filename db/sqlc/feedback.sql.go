@@ -25,14 +25,21 @@ type CreateFeedbackParams struct {
 	Comment       sql.NullString `json:"comment"`
 }
 
-func (q *Queries) CreateFeedback(ctx context.Context, arg CreateFeedbackParams) (Feedback, error) {
+type CreateFeedbackRow struct {
+	ID            uuid.UUID      `json:"id"`
+	AppointmentID uuid.NullUUID  `json:"appointment_id"`
+	Rating        sql.NullInt32  `json:"rating"`
+	Comment       sql.NullString `json:"comment"`
+}
+
+func (q *Queries) CreateFeedback(ctx context.Context, arg CreateFeedbackParams) (CreateFeedbackRow, error) {
 	row := q.db.QueryRowContext(ctx, createFeedback,
 		arg.ID,
 		arg.AppointmentID,
 		arg.Rating,
 		arg.Comment,
 	)
-	var i Feedback
+	var i CreateFeedbackRow
 	err := row.Scan(
 		&i.ID,
 		&i.AppointmentID,
@@ -61,9 +68,16 @@ WHERE id = $1
 LIMIT 1
 `
 
-func (q *Queries) GetFeedback(ctx context.Context, id uuid.UUID) (Feedback, error) {
+type GetFeedbackRow struct {
+	ID            uuid.UUID      `json:"id"`
+	AppointmentID uuid.NullUUID  `json:"appointment_id"`
+	Rating        sql.NullInt32  `json:"rating"`
+	Comment       sql.NullString `json:"comment"`
+}
+
+func (q *Queries) GetFeedback(ctx context.Context, id uuid.UUID) (GetFeedbackRow, error) {
 	row := q.db.QueryRowContext(ctx, getFeedback, id)
-	var i Feedback
+	var i GetFeedbackRow
 	err := row.Scan(
 		&i.ID,
 		&i.AppointmentID,
@@ -89,14 +103,21 @@ type UpdateFeedbackParams struct {
 	Comment       sql.NullString `json:"comment"`
 }
 
-func (q *Queries) UpdateFeedback(ctx context.Context, arg UpdateFeedbackParams) (Feedback, error) {
+type UpdateFeedbackRow struct {
+	ID            uuid.UUID      `json:"id"`
+	AppointmentID uuid.NullUUID  `json:"appointment_id"`
+	Rating        sql.NullInt32  `json:"rating"`
+	Comment       sql.NullString `json:"comment"`
+}
+
+func (q *Queries) UpdateFeedback(ctx context.Context, arg UpdateFeedbackParams) (UpdateFeedbackRow, error) {
 	row := q.db.QueryRowContext(ctx, updateFeedback,
 		arg.ID,
 		arg.AppointmentID,
 		arg.Rating,
 		arg.Comment,
 	)
-	var i Feedback
+	var i UpdateFeedbackRow
 	err := row.Scan(
 		&i.ID,
 		&i.AppointmentID,

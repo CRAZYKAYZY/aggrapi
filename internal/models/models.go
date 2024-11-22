@@ -2,31 +2,9 @@ package models
 
 import (
 	"database/sql"
-	"time"
 
 	"github.com/google/uuid"
 )
-
-type Appointment struct {
-	ID         uuid.UUID     `json:"id"`
-	CustomerID uuid.NullUUID `json:"customer_id"`
-	VendorID   uuid.NullUUID `json:"vendor_id"`
-	Date       time.Time     `json:"date"`
-	TimeSlotID uuid.NullUUID `json:"time_slot_id"`
-	Status     interface{}   `json:"status"`
-}
-
-type Contact struct {
-	ID      uuid.UUID      `json:"id"`
-	UserID  uuid.UUID      `json:"user_id"`
-	Phone   sql.NullString `json:"phone"`
-	Address sql.NullString `json:"address"`
-}
-
-type Customer struct {
-	ID     uuid.UUID     `json:"id"`
-	UserID uuid.NullUUID `json:"user_id"`
-}
 
 type Feedback struct {
 	ID            uuid.UUID      `json:"id"`
@@ -65,14 +43,6 @@ type TimeSlot struct {
 	EndTime    sql.NullTime  `json:"end_time"`
 	IsBooked   sql.NullBool  `json:"is_booked"`
 	BufferTime sql.NullInt64 `json:"buffer_time"`
-}
-
-type Vendor struct {
-	ID             uuid.UUID      `json:"id"`
-	UserID         uuid.NullUUID  `json:"user_id"`
-	Biography      sql.NullString `json:"biography"`
-	ProfilePicture sql.NullString `json:"profile_picture"`
-	Active         sql.NullBool   `json:"active"`
 }
 
 type VendorAvailability struct {

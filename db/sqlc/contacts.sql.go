@@ -25,14 +25,21 @@ type CreateContactParams struct {
 	Address sql.NullString `json:"address"`
 }
 
-func (q *Queries) CreateContact(ctx context.Context, arg CreateContactParams) (Contact, error) {
+type CreateContactRow struct {
+	ID      uuid.UUID      `json:"id"`
+	UserID  uuid.UUID      `json:"user_id"`
+	Phone   sql.NullString `json:"phone"`
+	Address sql.NullString `json:"address"`
+}
+
+func (q *Queries) CreateContact(ctx context.Context, arg CreateContactParams) (CreateContactRow, error) {
 	row := q.db.QueryRowContext(ctx, createContact,
 		arg.ID,
 		arg.UserID,
 		arg.Phone,
 		arg.Address,
 	)
-	var i Contact
+	var i CreateContactRow
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
@@ -61,9 +68,16 @@ WHERE id = $1
 LIMIT 1
 `
 
-func (q *Queries) GetContact(ctx context.Context, id uuid.UUID) (Contact, error) {
+type GetContactRow struct {
+	ID      uuid.UUID      `json:"id"`
+	UserID  uuid.UUID      `json:"user_id"`
+	Phone   sql.NullString `json:"phone"`
+	Address sql.NullString `json:"address"`
+}
+
+func (q *Queries) GetContact(ctx context.Context, id uuid.UUID) (GetContactRow, error) {
 	row := q.db.QueryRowContext(ctx, getContact, id)
-	var i Contact
+	var i GetContactRow
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
@@ -87,9 +101,16 @@ type UpdateContactParams struct {
 	Address sql.NullString `json:"address"`
 }
 
-func (q *Queries) UpdateContact(ctx context.Context, arg UpdateContactParams) (Contact, error) {
+type UpdateContactRow struct {
+	ID      uuid.UUID      `json:"id"`
+	UserID  uuid.UUID      `json:"user_id"`
+	Phone   sql.NullString `json:"phone"`
+	Address sql.NullString `json:"address"`
+}
+
+func (q *Queries) UpdateContact(ctx context.Context, arg UpdateContactParams) (UpdateContactRow, error) {
 	row := q.db.QueryRowContext(ctx, updateContact, arg.ID, arg.Phone, arg.Address)
-	var i Contact
+	var i UpdateContactRow
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,

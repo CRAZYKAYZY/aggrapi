@@ -130,6 +130,10 @@ func (s *userServiceImpl) UpdateUserService(id, name, email, password string) (*
 		return nil, errors.New("user not found")
 	}
 
+	if user.UserType != "admin" {
+		return nil, errors.New("only admin users can update details")
+	}
+
 	// Optionally hash the password if it has been updated
 	hashedPassword := user.Password
 	if password != "" {

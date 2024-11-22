@@ -12,19 +12,23 @@ import (
 )
 
 type Appointment struct {
-	ID         uuid.UUID     `json:"id"`
-	CustomerID uuid.NullUUID `json:"customer_id"`
-	VendorID   uuid.NullUUID `json:"vendor_id"`
-	Date       time.Time     `json:"date"`
-	TimeSlotID uuid.NullUUID `json:"time_slot_id"`
-	Status     interface{}   `json:"status"`
+	ID         uuid.UUID `json:"id"`
+	CustomerID uuid.UUID `json:"customer_id"`
+	VendorID   uuid.UUID `json:"vendor_id"`
+	Date       time.Time `json:"date"`
+	TimeSlotID uuid.UUID `json:"time_slot_id"`
+	Status     string    `json:"status"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
 }
 
 type Contact struct {
-	ID      uuid.UUID      `json:"id"`
-	UserID  uuid.UUID      `json:"user_id"`
-	Phone   sql.NullString `json:"phone"`
-	Address sql.NullString `json:"address"`
+	ID        uuid.UUID      `json:"id"`
+	UserID    uuid.UUID      `json:"user_id"`
+	Phone     sql.NullString `json:"phone"`
+	Address   sql.NullString `json:"address"`
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
 }
 
 type Customer struct {
@@ -37,6 +41,8 @@ type Feedback struct {
 	AppointmentID uuid.NullUUID  `json:"appointment_id"`
 	Rating        sql.NullInt32  `json:"rating"`
 	Comment       sql.NullString `json:"comment"`
+	CreatedAt     time.Time      `json:"created_at"`
+	UpdatedAt     time.Time      `json:"updated_at"`
 }
 
 type Payment struct {
@@ -49,17 +55,19 @@ type Payment struct {
 	Status        interface{}    `json:"status"`
 	PaymentDate   sql.NullTime   `json:"payment_date"`
 	TransactionID sql.NullString `json:"transaction_id"`
+	CreatedAt     time.Time      `json:"created_at"`
+	UpdatedAt     time.Time      `json:"updated_at"`
 }
 
 type Service struct {
 	ID          uuid.UUID      `json:"id"`
-	VendorID    uuid.NullUUID  `json:"vendor_id"`
-	Name        sql.NullString `json:"name"`
+	VendorID    uuid.UUID      `json:"vendor_id"`
+	Name        string         `json:"name"`
 	Description sql.NullString `json:"description"`
 	Price       sql.NullString `json:"price"`
 	Duration    sql.NullInt64  `json:"duration"`
-	CreatedAt   sql.NullTime   `json:"created_at"`
-	UpdatedAt   sql.NullTime   `json:"updated_at"`
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at"`
 }
 
 type TimeSlot struct {
@@ -87,11 +95,13 @@ type Vendor struct {
 	Biography      sql.NullString `json:"biography"`
 	ProfilePicture sql.NullString `json:"profile_picture"`
 	Active         sql.NullBool   `json:"active"`
+	CreatedAt      time.Time      `json:"created_at"`
+	UpdatedAt      time.Time      `json:"updated_at"`
 }
 
 type VendorAvailability struct {
-	ID        uuid.UUID     `json:"id"`
-	VendorID  uuid.NullUUID `json:"vendor_id"`
-	DayOfWeek interface{}   `json:"day_of_week"`
-	Date      sql.NullTime  `json:"date"`
+	ID        uuid.UUID    `json:"id"`
+	VendorID  uuid.UUID    `json:"vendor_id"`
+	DayOfWeek string       `json:"day_of_week"`
+	Date      sql.NullTime `json:"date"`
 }

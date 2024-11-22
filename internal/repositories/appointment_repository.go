@@ -3,6 +3,8 @@ package repositories
 import (
 	"context"
 	"database/sql"
+	"fmt"
+	"time"
 
 	sqlc "github.com/ChileKasoka/mis/db/sqlc"
 	models "github.com/ChileKasoka/mis/internal/models"
@@ -13,6 +15,7 @@ type AppointmentRepository interface {
 	FindAll() ([]models.Appointment, error)
 	FindById(id string) (*models.Appointment, error)
 	CreateAppointment(appointment models.Appointment) (models.Appointment, error)
+	CheckConfirmedAppointment(vendorID, timeSlotID uuid.UUID, date time.Time) (bool, error)
 }
 
 type appointmentRepositoryImpl struct {
@@ -30,7 +33,7 @@ func (r *appointmentRepositoryImpl) CreateAppointment(appointment models.Appoint
 		VendorID:   appointment.VendorID,
 		Date:       appointment.Date,
 		TimeSlotID: appointment.TimeSlotID,
-		Status:     appointment.Status,
+		Status:     string(appointment.Status),
 	}
 
 	createdAppointment, err := r.Queries.CreateAppointment(context.TODO(), arg)
@@ -44,7 +47,7 @@ func (r *appointmentRepositoryImpl) CreateAppointment(appointment models.Appoint
 		VendorID:   createdAppointment.VendorID,
 		Date:       createdAppointment.Date,
 		TimeSlotID: createdAppointment.TimeSlotID,
-		Status:     createdAppointment.Status,
+		Status:     models.AppointmentStatus(createdAppointment.Status),
 	}
 
 	return result, nil
@@ -64,7 +67,7 @@ func (r *appointmentRepositoryImpl) FindAll() ([]models.Appointment, error) {
 			VendorID:   row.VendorID,
 			Date:       row.Date,
 			TimeSlotID: row.TimeSlotID,
-			Status:     row.Status,
+			Status:     models.AppointmentStatus(row.Status),
 		})
 	}
 
@@ -91,8 +94,23 @@ func (r *appointmentRepositoryImpl) FindById(id string) (*models.Appointment, er
 		VendorID:   appointment.VendorID,
 		Date:       appointment.Date,
 		TimeSlotID: appointment.TimeSlotID,
-		Status:     appointment.Status,
+		Status:     models.AppointmentStatus(appointment.Status),
 	}
 
 	return result, nil
+}
+
+func (r *appointmentRepositoryImpl) CheckConfirmedAppointment(vendorID, timeSlotID uuid.UUID, date time.Time) (bool, error) {
+	params := sqlc.CheckConfirmedAppointmentParams{
+		VendorID:   vendorID,
+		TimeSlotID: timeSlotID,
+		Date:       date,
+	}
+
+	exists, err := r.Queries.CheckConfirmedAppointment(context.Background(), params)
+	if err != nil {
+		return false, fmt.Errorf("failed to check confirmed appointment: %w", err)
+	}
+
+	return exists, nil
 }
