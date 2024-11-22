@@ -26,7 +26,15 @@ type CreateVendorParams struct {
 	Active         sql.NullBool   `json:"active"`
 }
 
-func (q *Queries) CreateVendor(ctx context.Context, arg CreateVendorParams) (Vendor, error) {
+type CreateVendorRow struct {
+	ID             uuid.UUID      `json:"id"`
+	UserID         uuid.NullUUID  `json:"user_id"`
+	Biography      sql.NullString `json:"biography"`
+	ProfilePicture sql.NullString `json:"profile_picture"`
+	Active         sql.NullBool   `json:"active"`
+}
+
+func (q *Queries) CreateVendor(ctx context.Context, arg CreateVendorParams) (CreateVendorRow, error) {
 	row := q.db.QueryRowContext(ctx, createVendor,
 		arg.ID,
 		arg.UserID,
@@ -34,7 +42,7 @@ func (q *Queries) CreateVendor(ctx context.Context, arg CreateVendorParams) (Ven
 		arg.ProfilePicture,
 		arg.Active,
 	)
-	var i Vendor
+	var i CreateVendorRow
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
@@ -64,9 +72,17 @@ WHERE id = $1
 LIMIT 1
 `
 
-func (q *Queries) GetVendor(ctx context.Context, id uuid.UUID) (Vendor, error) {
+type GetVendorRow struct {
+	ID             uuid.UUID      `json:"id"`
+	UserID         uuid.NullUUID  `json:"user_id"`
+	Biography      sql.NullString `json:"biography"`
+	ProfilePicture sql.NullString `json:"profile_picture"`
+	Active         sql.NullBool   `json:"active"`
+}
+
+func (q *Queries) GetVendor(ctx context.Context, id uuid.UUID) (GetVendorRow, error) {
 	row := q.db.QueryRowContext(ctx, getVendor, id)
-	var i Vendor
+	var i GetVendorRow
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
@@ -93,14 +109,22 @@ type UpdateVendorParams struct {
 	Active         sql.NullBool   `json:"active"`
 }
 
-func (q *Queries) UpdateVendor(ctx context.Context, arg UpdateVendorParams) (Vendor, error) {
+type UpdateVendorRow struct {
+	ID             uuid.UUID      `json:"id"`
+	UserID         uuid.NullUUID  `json:"user_id"`
+	Biography      sql.NullString `json:"biography"`
+	ProfilePicture sql.NullString `json:"profile_picture"`
+	Active         sql.NullBool   `json:"active"`
+}
+
+func (q *Queries) UpdateVendor(ctx context.Context, arg UpdateVendorParams) (UpdateVendorRow, error) {
 	row := q.db.QueryRowContext(ctx, updateVendor,
 		arg.ID,
 		arg.Biography,
 		arg.ProfilePicture,
 		arg.Active,
 	)
-	var i Vendor
+	var i UpdateVendorRow
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,

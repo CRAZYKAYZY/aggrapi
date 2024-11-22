@@ -12,6 +12,30 @@ import (
 	"github.com/google/uuid"
 )
 
+const checkConfirmedAppointment = `-- name: CheckConfirmedAppointment :one
+SELECT EXISTS (
+    SELECT 1 
+    FROM appointments 
+    WHERE vendor_id = $1 
+    AND time_slot_id = $2 
+    AND date = $3 
+    AND status = 'confirmed'
+) AS exists
+`
+
+type CheckConfirmedAppointmentParams struct {
+	VendorID   uuid.UUID `json:"vendor_id"`
+	TimeSlotID uuid.UUID `json:"time_slot_id"`
+	Date       time.Time `json:"date"`
+}
+
+func (q *Queries) CheckConfirmedAppointment(ctx context.Context, arg CheckConfirmedAppointmentParams) (bool, error) {
+	row := q.db.QueryRowContext(ctx, checkConfirmedAppointment, arg.VendorID, arg.TimeSlotID, arg.Date)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
 const createAppointment = `-- name: CreateAppointment :one
 INSERT INTO appointments (id, customer_id, vendor_id, date, time_slot_id, status)
 VALUES ($1, $2, $3, $4, $5, $6)
@@ -19,15 +43,24 @@ RETURNING id, customer_id, vendor_id, date, time_slot_id, status
 `
 
 type CreateAppointmentParams struct {
-	ID         uuid.UUID     `json:"id"`
-	CustomerID uuid.NullUUID `json:"customer_id"`
-	VendorID   uuid.NullUUID `json:"vendor_id"`
-	Date       time.Time     `json:"date"`
-	TimeSlotID uuid.NullUUID `json:"time_slot_id"`
-	Status     interface{}   `json:"status"`
+	ID         uuid.UUID `json:"id"`
+	CustomerID uuid.UUID `json:"customer_id"`
+	VendorID   uuid.UUID `json:"vendor_id"`
+	Date       time.Time `json:"date"`
+	TimeSlotID uuid.UUID `json:"time_slot_id"`
+	Status     string    `json:"status"`
 }
 
-func (q *Queries) CreateAppointment(ctx context.Context, arg CreateAppointmentParams) (Appointment, error) {
+type CreateAppointmentRow struct {
+	ID         uuid.UUID `json:"id"`
+	CustomerID uuid.UUID `json:"customer_id"`
+	VendorID   uuid.UUID `json:"vendor_id"`
+	Date       time.Time `json:"date"`
+	TimeSlotID uuid.UUID `json:"time_slot_id"`
+	Status     string    `json:"status"`
+}
+
+func (q *Queries) CreateAppointment(ctx context.Context, arg CreateAppointmentParams) (CreateAppointmentRow, error) {
 	row := q.db.QueryRowContext(ctx, createAppointment,
 		arg.ID,
 		arg.CustomerID,
@@ -36,7 +69,7 @@ func (q *Queries) CreateAppointment(ctx context.Context, arg CreateAppointmentPa
 		arg.TimeSlotID,
 		arg.Status,
 	)
-	var i Appointment
+	var i CreateAppointmentRow
 	err := row.Scan(
 		&i.ID,
 		&i.CustomerID,
@@ -61,7 +94,7 @@ func (q *Queries) DeleteAppointment(ctx context.Context, id uuid.UUID) (uuid.UUI
 }
 
 const getAllAppointments = `-- name: GetAllAppointments :many
-SELECT id, customer_id, vendor_id, date, time_slot_id, status from appointments
+SELECT id, customer_id, vendor_id, date, time_slot_id, status, created_at, updated_at from appointments
 `
 
 func (q *Queries) GetAllAppointments(ctx context.Context) ([]Appointment, error) {
@@ -80,6 +113,8 @@ func (q *Queries) GetAllAppointments(ctx context.Context) ([]Appointment, error)
 			&i.Date,
 			&i.TimeSlotID,
 			&i.Status,
+			&i.CreatedAt,
+			&i.UpdatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -101,9 +136,18 @@ WHERE id = $1
 LIMIT 1
 `
 
-func (q *Queries) GetAppointmentById(ctx context.Context, id uuid.UUID) (Appointment, error) {
+type GetAppointmentByIdRow struct {
+	ID         uuid.UUID `json:"id"`
+	CustomerID uuid.UUID `json:"customer_id"`
+	VendorID   uuid.UUID `json:"vendor_id"`
+	Date       time.Time `json:"date"`
+	TimeSlotID uuid.UUID `json:"time_slot_id"`
+	Status     string    `json:"status"`
+}
+
+func (q *Queries) GetAppointmentById(ctx context.Context, id uuid.UUID) (GetAppointmentByIdRow, error) {
 	row := q.db.QueryRowContext(ctx, getAppointmentById, id)
-	var i Appointment
+	var i GetAppointmentByIdRow
 	err := row.Scan(
 		&i.ID,
 		&i.CustomerID,
@@ -127,15 +171,24 @@ RETURNING id, customer_id, vendor_id, date, time_slot_id, status
 `
 
 type UpdateAppointmentParams struct {
-	ID         uuid.UUID     `json:"id"`
-	CustomerID uuid.NullUUID `json:"customer_id"`
-	VendorID   uuid.NullUUID `json:"vendor_id"`
-	Date       time.Time     `json:"date"`
-	TimeSlotID uuid.NullUUID `json:"time_slot_id"`
-	Status     interface{}   `json:"status"`
+	ID         uuid.UUID `json:"id"`
+	CustomerID uuid.UUID `json:"customer_id"`
+	VendorID   uuid.UUID `json:"vendor_id"`
+	Date       time.Time `json:"date"`
+	TimeSlotID uuid.UUID `json:"time_slot_id"`
+	Status     string    `json:"status"`
 }
 
-func (q *Queries) UpdateAppointment(ctx context.Context, arg UpdateAppointmentParams) (Appointment, error) {
+type UpdateAppointmentRow struct {
+	ID         uuid.UUID `json:"id"`
+	CustomerID uuid.UUID `json:"customer_id"`
+	VendorID   uuid.UUID `json:"vendor_id"`
+	Date       time.Time `json:"date"`
+	TimeSlotID uuid.UUID `json:"time_slot_id"`
+	Status     string    `json:"status"`
+}
+
+func (q *Queries) UpdateAppointment(ctx context.Context, arg UpdateAppointmentParams) (UpdateAppointmentRow, error) {
 	row := q.db.QueryRowContext(ctx, updateAppointment,
 		arg.ID,
 		arg.CustomerID,
@@ -144,7 +197,7 @@ func (q *Queries) UpdateAppointment(ctx context.Context, arg UpdateAppointmentPa
 		arg.TimeSlotID,
 		arg.Status,
 	)
-	var i Appointment
+	var i UpdateAppointmentRow
 	err := row.Scan(
 		&i.ID,
 		&i.CustomerID,

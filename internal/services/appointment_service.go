@@ -1,6 +1,8 @@
 package services
 
 import (
+	"errors"
+
 	models "github.com/ChileKasoka/mis/internal/models"
 	"github.com/ChileKasoka/mis/internal/repositories"
 )
@@ -22,7 +24,16 @@ func NewAppointmentService(repository repositories.AppointmentRepository) Appoin
 }
 
 func (s *appointmentServiceImpl) CreateAppointment(appointment models.Appointment) (models.Appointment, error) {
-	// You can add any business logic here, like checking if the appointment is valid
+	// Check if there's already a confirmed appointment for this vendor, date, and time slot
+	exists, err := s.repository.CheckConfirmedAppointment(appointment.VendorID, appointment.TimeSlotID, appointment.Date)
+	if err != nil {
+		return models.Appointment{}, err
+	}
+	if exists {
+		return models.Appointment{}, errors.New("an appointment is already confirmed for this vendor at the selected time")
+	}
+
+	// Proceed to create the appointment if no conflict exists
 	createdAppointment, err := s.repository.CreateAppointment(appointment)
 	if err != nil {
 		return models.Appointment{}, err

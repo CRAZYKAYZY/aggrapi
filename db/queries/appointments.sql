@@ -26,3 +26,14 @@ RETURNING id, customer_id, vendor_id, date, time_slot_id, status;
 DELETE FROM appointments
 WHERE id = $1
 RETURNING id;
+
+-- name: CheckConfirmedAppointment :one
+SELECT EXISTS (
+    SELECT 1 
+    FROM appointments 
+    WHERE vendor_id = $1 
+    AND time_slot_id = $2 
+    AND date = $3 
+    AND status = 'confirmed'
+) AS exists;
+

@@ -30,7 +30,19 @@ type CreatePaymentParams struct {
 	TransactionID sql.NullString `json:"transaction_id"`
 }
 
-func (q *Queries) CreatePayment(ctx context.Context, arg CreatePaymentParams) (Payment, error) {
+type CreatePaymentRow struct {
+	ID            uuid.UUID      `json:"id"`
+	AppointmentID uuid.NullUUID  `json:"appointment_id"`
+	CustomerID    uuid.NullUUID  `json:"customer_id"`
+	VendorID      uuid.NullUUID  `json:"vendor_id"`
+	Amount        sql.NullString `json:"amount"`
+	PaymentMethod interface{}    `json:"payment_method"`
+	Status        interface{}    `json:"status"`
+	PaymentDate   sql.NullTime   `json:"payment_date"`
+	TransactionID sql.NullString `json:"transaction_id"`
+}
+
+func (q *Queries) CreatePayment(ctx context.Context, arg CreatePaymentParams) (CreatePaymentRow, error) {
 	row := q.db.QueryRowContext(ctx, createPayment,
 		arg.ID,
 		arg.AppointmentID,
@@ -42,7 +54,7 @@ func (q *Queries) CreatePayment(ctx context.Context, arg CreatePaymentParams) (P
 		arg.PaymentDate,
 		arg.TransactionID,
 	)
-	var i Payment
+	var i CreatePaymentRow
 	err := row.Scan(
 		&i.ID,
 		&i.AppointmentID,
@@ -76,9 +88,21 @@ WHERE id = $1
 LIMIT 1
 `
 
-func (q *Queries) GetPayment(ctx context.Context, id uuid.UUID) (Payment, error) {
+type GetPaymentRow struct {
+	ID            uuid.UUID      `json:"id"`
+	AppointmentID uuid.NullUUID  `json:"appointment_id"`
+	CustomerID    uuid.NullUUID  `json:"customer_id"`
+	VendorID      uuid.NullUUID  `json:"vendor_id"`
+	Amount        sql.NullString `json:"amount"`
+	PaymentMethod interface{}    `json:"payment_method"`
+	Status        interface{}    `json:"status"`
+	PaymentDate   sql.NullTime   `json:"payment_date"`
+	TransactionID sql.NullString `json:"transaction_id"`
+}
+
+func (q *Queries) GetPayment(ctx context.Context, id uuid.UUID) (GetPaymentRow, error) {
 	row := q.db.QueryRowContext(ctx, getPayment, id)
-	var i Payment
+	var i GetPaymentRow
 	err := row.Scan(
 		&i.ID,
 		&i.AppointmentID,
@@ -119,7 +143,19 @@ type UpdatePaymentParams struct {
 	TransactionID sql.NullString `json:"transaction_id"`
 }
 
-func (q *Queries) UpdatePayment(ctx context.Context, arg UpdatePaymentParams) (Payment, error) {
+type UpdatePaymentRow struct {
+	ID            uuid.UUID      `json:"id"`
+	AppointmentID uuid.NullUUID  `json:"appointment_id"`
+	CustomerID    uuid.NullUUID  `json:"customer_id"`
+	VendorID      uuid.NullUUID  `json:"vendor_id"`
+	Amount        sql.NullString `json:"amount"`
+	PaymentMethod interface{}    `json:"payment_method"`
+	Status        interface{}    `json:"status"`
+	PaymentDate   sql.NullTime   `json:"payment_date"`
+	TransactionID sql.NullString `json:"transaction_id"`
+}
+
+func (q *Queries) UpdatePayment(ctx context.Context, arg UpdatePaymentParams) (UpdatePaymentRow, error) {
 	row := q.db.QueryRowContext(ctx, updatePayment,
 		arg.ID,
 		arg.AppointmentID,
@@ -131,7 +167,7 @@ func (q *Queries) UpdatePayment(ctx context.Context, arg UpdatePaymentParams) (P
 		arg.PaymentDate,
 		arg.TransactionID,
 	)
-	var i Payment
+	var i UpdatePaymentRow
 	err := row.Scan(
 		&i.ID,
 		&i.AppointmentID,

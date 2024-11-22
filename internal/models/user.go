@@ -62,6 +62,6 @@ func NewUser(name, email, password, usertype string) *User {
 // 	}
 // }
 
-// func isAdmin(user *User) bool {
-// 	return user.UserType == adminType
+// func isAdmin(u *User) bool {
+// 	return u.UserType == adminType
 // }

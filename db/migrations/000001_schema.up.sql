@@ -1,17 +1,5 @@
 -- Step 1: Create necessary enum types
 DO $$ BEGIN
-    CREATE TYPE appointment_status_enum AS ENUM ('scheduled', 'completed', 'canceled');
-EXCEPTION
-    WHEN duplicate_object THEN null;
-END $$;
-
-DO $$ BEGIN
-    CREATE TYPE day_of_week_enum AS ENUM ('Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday');
-EXCEPTION
-    WHEN duplicate_object THEN null;
-END $$;
-
-DO $$ BEGIN
     CREATE TYPE payment_status_enum AS ENUM ('pending', 'completed', 'failed');
 EXCEPTION
     WHEN duplicate_object THEN null;
@@ -40,7 +28,9 @@ CREATE TABLE "contacts" (
   "id" uuid PRIMARY KEY,
   "user_id" uuid NOT NULL,
   "phone" varchar UNIQUE,
-  "address" varchar
+  "address" varchar,
+  "created_at" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updated_at" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP 
 );
 
 CREATE TABLE "vendors" (
@@ -48,7 +38,9 @@ CREATE TABLE "vendors" (
   "user_id" uuid,
   "biography" text,
   "profile_picture" varchar,
-  "active" bool DEFAULT false
+  "active" bool DEFAULT false,
+  "created_at" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updated_at" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP 
 );
 
 CREATE TABLE "customers" (
@@ -58,11 +50,13 @@ CREATE TABLE "customers" (
 
 CREATE TABLE "appointments" (
   "id" uuid PRIMARY KEY,
-  "customer_id" uuid,
-  "vendor_id" uuid,
+  "customer_id" uuid NOT NULL,
+  "vendor_id" uuid NOT NULL,
   "date" TIMESTAMP(3) NOT NULL,
-  "time_slot_id" uuid,
-  "status" appointment_status_enum
+  "time_slot_id" uuid NOT NULL,
+  "status" varchar NOT NULL,
+  "created_at" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updated_at" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP 
 );
 
 CREATE TABLE "time_slots" (
@@ -76,8 +70,8 @@ CREATE TABLE "time_slots" (
 
 CREATE TABLE "vendor_availability" (
   "id" uuid PRIMARY KEY,
-  "vendor_id" uuid,
-  "day_of_week" day_of_week_enum,
+  "vendor_id" uuid NOT NULL,
+  "day_of_week" varchar NOT NULL,
   "date" date
 );
 
@@ -85,18 +79,20 @@ CREATE TABLE "feedback" (
   "id" uuid PRIMARY KEY,
   "appointment_id" uuid,
   "rating" int,
-  "comment" text
+  "comment" text,
+  "created_at" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updated_at" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP 
 );
 
 CREATE TABLE "services" (
   "id" uuid PRIMARY KEY,
-  "vendor_id" uuid,
-  "name" varchar,
+  "vendor_id" uuid NOT NULL,
+  "name" varchar NOT NULL,
   "description" text,
   "price" decimal(10,2),
   "duration" interval,
-  "created_at" timestamp,
-  "updated_at" timestamp
+  "created_at" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updated_at" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP 
 );
 
 CREATE TABLE "payments" (
@@ -108,7 +104,9 @@ CREATE TABLE "payments" (
   "payment_method" payment_method_enum,
   "status" payment_status_enum,
   "payment_date" timestamp,
-  "transaction_id" varchar
+  "transaction_id" varchar,
+  "created_at" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updated_at" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP 
 );
 
 -- Step 2: Create foreign keys
