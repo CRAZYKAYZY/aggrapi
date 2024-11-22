@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -22,6 +23,7 @@ type LoginResponse struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
 }
+
 type UpdateUserRequest struct {
 	Name     string `json:"name"`
 	Email    string `json:"email"`
@@ -50,6 +52,7 @@ func NewUserHandler(service services.UserService, jwtSecret string) *UserHandler
 
 func (u *UserHandler) RegisterRoutes(r chi.Router) {
 	r.Post("/new-user", u.HandleNewUser)
+	r.With(middleware.JWTAuth(u.JWTSecret)).Get("/user/{id}", u.GetCurrentUser)
 	r.Post("/login", u.Login)
 	r.Post("/refresh-token", u.RefreshTokenHandler)
 	r.With(middleware.JWTAuth(u.JWTSecret)).Put("/update-user", u.UpdateUserHandler)
@@ -72,6 +75,29 @@ func (u *UserHandler) HandleNewUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(newUser)
+}
+
+func (u *UserHandler) GetCurrentUser(w http.ResponseWriter, r *http.Request) {
+	// Extract user ID from the request, e.g., URL or context
+	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok || userID == "" {
+		http.Error(w, "Unauthorized: missing or invalid user ID", http.StatusUnauthorized)
+		return
+	}
+
+	// Call the service to get the user
+	getUser, err := u.UserService.GetUser(userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+	fmt.Println(getUser.Email)
+
+	// Respond with the user information as JSON
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(getUser); err != nil {
+		http.Error(w, "failed to encode user data", http.StatusInternalServerError)
+	}
 }
 
 func (u *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
